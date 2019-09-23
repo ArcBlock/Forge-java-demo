@@ -22,6 +22,7 @@ import org.springframework.boot.runApplication
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.*
 
 @SpringBootApplication
 class DemoApplication
@@ -82,6 +83,26 @@ class InitLine : CommandLineRunner {
 		Thread.sleep(5000) //wait for block to commit
 		//Query account balance again
 		accountRequest.onNext(RequestGetAccountState.newBuilder().setAddress(alice.wallet.address).build())
+
+
+		//Create stream listener of asset
+		val queryAsset = forge.getAssetState(object : StreamObserver<Rpc.ResponseGetAssetState>{
+			override fun onNext(value: Rpc.ResponseGetAssetState?) {
+				logger.info("\n@@@@@@@ Asset @@@@@@@")
+				logger.info("\n@@@@@@@ Asset @@@@@@@\n${value}")
+			}
+			override fun onError(t: Throwable?) {}
+			override fun onCompleted() {}
+		})
+
+		//create simple asset
+		val ( assetResponse, assetAddress) = forge.createAsset("string","abcdefg-${UUID.randomUUID().toString()}".toByteArray(),"MonikerCan'tBeEmpty",alice.wallet)
+		logger.info("\n\n\n@@@@@@@ Create Asset @@@@@@@ $assetAddress")
+		logger.info("\n $assetResponse")
+		Thread.sleep(5000) //wait for block to commit
+		queryAsset.onNext(Rpc.RequestGetAssetState.newBuilder().setAddress(assetAddress)
+			.build())
+		Thread.sleep(1000) //wait for block to commit
 
 	}
 }
