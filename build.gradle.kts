@@ -13,15 +13,26 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
 	mavenCentral()
-	maven(url = "http://android-docs.arcblock.io/release" )
+	mavenLocal()
+
 }
 
 dependencies {
-	implementation("io.arcblock.forge:core:0.37.2")
+	implementation("io.arcblock.forge:core:0.39.2")
+	implementation("io.arcblock.forge:did:0.39.2")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	//implementation("org.springframework.security:spring-security-jwt")
+	implementation("org.postgresql:postgresql")
 	implementation("io.grpc:grpc-netty:1.20.0")
 	implementation("org.springframework.boot:spring-boot-starter")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("io.jsonwebtoken:jjwt-api:0.10.7")
+	implementation("io.jsonwebtoken:jjwt-impl:0.10.7")
+	implementation("io.jsonwebtoken:jjwt-jackson:0.10.7")
+	implementation("io.github.harshilsharma63:controller-logger:1.2.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
@@ -30,4 +41,10 @@ tasks.withType<KotlinCompile> {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
 		jvmTarget = "1.8"
 	}
+}
+
+allOpen {
+	annotation("javax.persistence.Entity")
+	annotation("javax.persistence.Embeddable")
+	annotation("javax.persistence.MappedSuperclass")
 }
