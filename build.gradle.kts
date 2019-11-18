@@ -14,12 +14,11 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 repositories {
 	mavenCentral()
 	mavenLocal()
-
 }
 
 dependencies {
-	implementation("io.arcblock.forge:core:0.39.2")
-	implementation("io.arcblock.forge:did:0.39.2")
+	implementation("io.arcblock.forge:core:1.0.0")
+	implementation("io.arcblock.forge:did:1.0.0")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	//implementation("org.springframework.security:spring-security-jwt")
 	implementation("org.postgresql:postgresql")
