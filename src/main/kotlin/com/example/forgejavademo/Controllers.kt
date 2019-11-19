@@ -52,10 +52,13 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
 
   @Autowired lateinit var forge: ForgeSDKComponent
 
+  @Value("\${forge.http.port}")
+  lateinit var forgePort: String
+
   var ip = Utils.getHost4Address()
   var appInfo = lazy {
     AppInfo().let {
-      it.chainHost = "http://$ip:8212/api/"
+      it.chainHost = "http://$ip:$forgePort/api/"
       it.publisher = forge.wallet.address.did()
       it.name = "Forge Java Demo"
       it
@@ -99,7 +102,7 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
       val jwt = token.removePrefix("Bearer").trim()
       val claim = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).body
       val did = claim["did"].toString()
-      val response = forge.sdk.listTransactions(Rpc.RequestListTransactions.newBuilder()
+      val response = forge.sdk!!.listTransactions(Rpc.RequestListTransactions.newBuilder()
         .setAddressFilter(TraceType.AddressFilter.newBuilder().setSender(did.address()).setReceiver(forge.wallet.address).build())
         .build()).transactionsList.firstOrNull { it.code ==  Enum.StatusCode.ok }
       return if (response == null) "null" else JsonObject().apply { this.addProperty("hash",response.hash) }.toString()
@@ -133,14 +136,16 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
     val claims = when(act){
       "payment" ->{
         logger.info("\n\njwt:${jwt.iss}   ${body.userPk}\n\n")
-        val unsignedTx = TransactionFactory.unsignTransfer(forge.sdk.chainInfo.value.network, jwt.iss.address()?:"", body.userPk!!.decodeB58(),forge.wallet.address,
+        val unsignedTx = TransactionFactory.unsignTransfer(forge.sdk!!.chainInfo.value.network, jwt.iss.address()?:"", body.userPk!!.decodeB58(),forge.wallet
+          .address,
                 token =
         BigDecimal("5E18").toBigInteger().unSign())
         arrayOf(SignatureClaim(meta = null,description = "Please pay 5 TBA", typeUrl = "utf-8",origin=  unsignedTx.toByteArray().encodeB58(),data =
         unsignedTx.toByteArray().hash(HashType.SHA3).encodeB58(),sig = ""))
       }
       "checkin" ->{
-        val unsignedTx = TransactionFactory.unsignPoke(forge.sdk.chainInfo.value.network, WalletInfo(jwt.iss.address(),body.userPk!!.decodeB58(),ByteArray(0)))
+        val unsignedTx = TransactionFactory.unsignPoke(forge.sdk!!.chainInfo.value.network, WalletInfo(jwt.iss.address(),body.userPk!!.decodeB58(),ByteArray
+        (0)))
         arrayOf(SignatureClaim(null,"",origin = unsignedTx.toByteArray().encodeB58() ,data=  unsignedTx.toByteArray().hash(HashType.SHA3).encodeB58(),
                 description = "CheckIn and Get 25TBA"))
       }
@@ -189,7 +194,7 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
         ClaimType.SIGNATURE.name.toLowerCase() -> {
           val tx = Type.Transaction.parseFrom( claim["origin"].asString.decodeB58()).toBuilder().setSignature(claim["sig"].asString.decodeB58().toByteString
           ()).build()
-          val resp = forge.sdk.sendTx(tx)
+          val resp = forge.sdk!!.sendTx(tx)
           JsonObject().apply {
             this.addProperty("status", "ok")
             this.add("response", JsonObject().apply {

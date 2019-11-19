@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
 	id("org.springframework.boot") version "2.1.8.RELEASE"
@@ -41,6 +42,13 @@ tasks.withType<KotlinCompile> {
 		jvmTarget = "1.8"
 	}
 }
+
+tasks.withType<BootRun> {
+	if (project.hasProperty("args")){
+		args= (project.property("args") as String).split(",")
+	}
+}
+
 
 allOpen {
 	annotation("javax.persistence.Entity")

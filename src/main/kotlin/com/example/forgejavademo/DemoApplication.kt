@@ -30,6 +30,7 @@ import io.arcblock.forge.sign.Signer
 import org.springframework.context.annotation.Configuration
 import io.github.logger.controller.aspect.GenericControllerAspect
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 
 
@@ -57,9 +58,12 @@ class InitConfig{
 class InitLine : CommandLineRunner {
 	var logger = LoggerFactory.getLogger("Forge Init")
 	@Autowired lateinit var forge: ForgeSDKComponent
+
 	override fun run(vararg args: String?) {
 		// Connect forge chain node
-		forge.sdk.declare("application", forge.wallet)
+
+//		forge.sdk = ForgeSDK.connect("localhost", port.toInt())
+		forge.sdk!!.declare("application", forge.wallet)
 
 
 
