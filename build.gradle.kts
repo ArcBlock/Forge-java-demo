@@ -43,10 +43,21 @@ tasks.withType<KotlinCompile> {
 	}
 }
 
+
+
 tasks.withType<BootRun> {
+	var newArgs = mutableListOf<String>()
 	if (project.hasProperty("args")){
-		args= (project.property("args") as String).split(",")
+		newArgs.addAll((project.property("args") as String).split(","))
 	}
+	val envFilePath = System.getenv("ENV_FILE")?:""
+  if (envFilePath.isNotEmpty()){
+    File(envFilePath).readLines().forEach {
+			println("env line:$it")
+			newArgs.add("--$it")
+		}
+  }
+	args=newArgs.toList()
 }
 
 

@@ -52,13 +52,13 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
 
   @Autowired lateinit var forge: ForgeSDKComponent
 
-  @Value("\${forge.http.port}")
-  lateinit var forgePort: String
+  @Value("\${chainHost}")
+  lateinit var forgeChainHost: String
 
   var ip = Utils.getHost4Address()
   var appInfo = lazy {
     AppInfo().let {
-      it.chainHost = "http://$ip:$forgePort/api/"
+      it.chainHost = forgeChainHost
       it.publisher = forge.wallet.address.did()
       it.name = "Forge Java Demo"
       it
@@ -69,7 +69,6 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
   @Value("\${server.port}")
   lateinit var port: String
   init {
-
     logger.info("currenIp: $ip")
   }
 
