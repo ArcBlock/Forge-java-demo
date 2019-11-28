@@ -53,8 +53,9 @@ tasks.withType<BootRun> {
 	val envFilePath = System.getenv("ENV_FILE")?:""
   if (envFilePath.isNotEmpty()){
     File(envFilePath).readLines().forEach {
-			println("env line:$it")
-			newArgs.add("--$it")
+			val kv = it.replace("\"","").split("=")
+			environment(kv[0],kv[1])
+			newArgs.add("--$it".replace("\"","").replace("POSTGRE_URI","spring.datasource.url"))
 		}
   }
 	args=newArgs.toList()
