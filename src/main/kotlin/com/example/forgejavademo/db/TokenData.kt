@@ -27,9 +27,11 @@ class TokenData(
         var token: String,
         var status: String,
         var did: String? = null,
+        var error: String?= null,
         var sessionToken: String? = null
+
 ){
-  constructor():this("","",null,null)
+  constructor():this("","",null,null, null)
 }
 
 interface TokenReposity: CrudRepository<TokenData, String>

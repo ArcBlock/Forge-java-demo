@@ -230,12 +230,31 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
             ())
             .build()
           val resp = forge.sdk!!.sendTx(tx)
+
+          var token = tokenRepo.findById(t)
+            .get()
+            .apply {
+              if(resp.code == Enum.StatusCode.ok){
+                this.status =  "succeed"
+                this.error = null
+              }else {
+                this.status =  "error"
+                this.error = "$act failed"
+              }
+
+            }
+          tokenRepo.save(token)
+
           JsonObject().apply {
-            this.addProperty("status", "ok")
-            this.add("response", JsonObject().apply {
-              this.addProperty("hash", resp.hash)
-              this.addProperty("tx", tx.toByteArray().encodeB58())
-            })
+            this.addProperty("status",           if(resp.code == Enum.StatusCode.ok) "ok" else "error")
+            if(resp.code == Enum.StatusCode.ok) {
+              this.add("response", JsonObject().apply {
+                this.addProperty("hash", resp.hash)
+                this.addProperty("tx", tx.toByteArray().encodeB58())
+              })
+            }else{
+              this.addProperty("errorMessage",if(act == "checkin") "Check In Failed！" else  resp.code.toString() )
+            }
           }
         }
         else -> JsonObject().apply { this.addProperty("status", "ok") }
