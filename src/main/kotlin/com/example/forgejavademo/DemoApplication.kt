@@ -3,6 +3,8 @@ package com.example.forgejavademo
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.LoggerContext
 import com.google.common.io.BaseEncoding
+import com.google.gson.Gson
+import com.google.gson.JsonParser
 import forge_abi.Rpc.*
 import forge_abi.Type
 import io.arcblock.forge.*
@@ -22,10 +24,7 @@ import java.util.*
 import com.google.protobuf.ByteString
 import io.arcblock.forge.did.DIDGenerator
 import io.arcblock.forge.did.KeyType
-import io.arcblock.forge.extension.address
-import io.arcblock.forge.extension.decodeB58
-import io.arcblock.forge.extension.encodeB64Url
-import io.arcblock.forge.extension.toByteString
+import io.arcblock.forge.extension.*
 import io.arcblock.forge.sign.Signer
 import org.springframework.context.annotation.Configuration
 import io.github.logger.controller.aspect.GenericControllerAspect
@@ -64,8 +63,28 @@ class InitLine : CommandLineRunner {
 
 //		forge.sdk = ForgeSDK.connect("localhost", port.toInt())
 		forge.sdk!!.declare("application", forge.wallet)
+		val token = forge.sdk!!.getForgeState().state.token
 
-
+//		"token": {
+//			"decimal": 18,
+//			"description": "My token MYT",
+//			"icon": "",
+//			"inflationRate": 0,
+//			"initialSupply": "7500000000",
+//			"name": "MyToken",
+//			"symbol": "MYT",
+//			"totalSupply": "7500000000",
+//			"unit": "myt"
+//		}
+		Utils.tokenInfo.addProperty("decimal", token.decimal)
+		Utils.tokenInfo.addProperty("description", token.description)
+		//Utils.tokenInfo.addProperty("icon", token.icon.toByteArray().encodeB64())
+		Utils.tokenInfo.addProperty("inflationRate", token.inflationRate)
+		Utils.tokenInfo.addProperty("initialSupply", token.initialSupply)
+		Utils.tokenInfo.addProperty("name", token.name)
+		Utils.tokenInfo.addProperty("symbol", token.symbol)
+		Utils.tokenInfo.addProperty("totalSupply", token.totalSupply)
+		Utils.tokenInfo.addProperty("unit", token.unit)
 
 		// Query Chain info
 //		val chainInfo = forge.getChainInfo().info

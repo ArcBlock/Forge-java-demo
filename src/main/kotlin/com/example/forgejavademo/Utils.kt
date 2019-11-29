@@ -1,6 +1,7 @@
 package com.example.forgejavademo
 
 
+import com.google.gson.JsonObject
 import java.net.*
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -21,6 +22,8 @@ import java.util.*
  * Description  :
  **/
 object Utils {
+
+  public var tokenInfo = JsonObject()
 
   fun didUrl(url: String, pkB58: String, addr: String): String{
     return URLEncoder.encode("https://abtwallet.io/i?action=requestAuth&url=$url", StandardCharsets.UTF_8.toString())

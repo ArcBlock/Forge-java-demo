@@ -93,6 +93,7 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
 
       claim.keys.forEach { user.addProperty(it, claim[it].toString()) }
       json.add("user", user)
+      json.add("token",Utils.tokenInfo)
       logger.info("session:$json")
       return json.toString()
     }
