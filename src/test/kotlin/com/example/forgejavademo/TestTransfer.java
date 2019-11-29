@@ -42,14 +42,14 @@ public class TestTransfer {
     //Type.WalletInfo walletInfo = Type.WalletInfo.newBuilder().setSk(sk).setPk(pk).setAddress("z119LLxgzRqMd3W9LK92TyW6Y9q8kF1nu2dy").build();
 
     //WalletInfo wallet = DIDGenerator.INSTANCE.randomWallet();
-    WalletInfo wallet = new WalletInfo(DIDGenerator.INSTANCE.sk2did(sk.toByteArray()).substring(8),sk.toByteArray(),
-      WalletUtils.INSTANCE.sk2pk(KeyType.ED25519,
-      sk.toByteArray()));
-
-    Type.WalletInfo walletInfo =
-      Type.WalletInfo.newBuilder().setSk(sk).setPk(pk).setAddress(wallet.getAddress()).build();
-    sendResponse = forge.poke(walletInfo);
-
+//    WalletInfo wallet = new WalletInfo(DIDGenerator.INSTANCE.sk2did(sk.toByteArray()).substring(8),sk.toByteArray(),
+//      WalletUtils.INSTANCE.sk2pk(KeyType.ED25519,
+//      sk.toByteArray()));
+//
+//    Type.WalletInfo walletInfo =
+//      Type.WalletInfo.newBuilder().setSk(sk).setPk(pk).setAddress(wallet.getAddress()).build();
+//    sendResponse = forge.poke(walletInfo);
+//
     System.out.println("response:"+sendResponse.toString());
   }
 }

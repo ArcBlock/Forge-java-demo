@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import java.math.BigDecimal
+import java.util.*
 
 
 /**
@@ -223,6 +224,7 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
       val bytes = ByteArray(10)
       sun.security.provider.SecureRandom()
         .engineNextBytes(bytes)
+    Random().nextBytes(bytes)
       val token = bytes.encodeB16()
       tokenRepo.save(TokenData(token, "created"))
       json.addProperty("token", token)
