@@ -174,6 +174,12 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
       }
       else -> arrayOf(ProfileClaim(null, arrayListOf("fullname", "email", "phone"), "choose a profile", ""))
     }
+    var token = tokenRepo.findById(t)
+      .get()
+      .apply {
+          this.status =  "scanned"
+      }
+    tokenRepo.save(token)
 
     val ret = DidAuthUtils.createDidAuthToken(claims, appInfo.value
             , System.currentTimeMillis() / 1000, wallet = forge.wallet, url = url, others = null)
