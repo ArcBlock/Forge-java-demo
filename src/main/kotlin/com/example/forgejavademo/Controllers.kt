@@ -11,9 +11,8 @@ import forge_abi.Rpc
 import forge_abi.TraceType
 import forge_abi.Type
 import io.arcblock.forge.TransactionFactory
+import io.arcblock.forge.abtdid.AbtDidService
 import io.arcblock.forge.did.DidAuthUtils
-import io.arcblock.forge.did.HashType
-import io.arcblock.forge.did.WalletInfo
 import io.arcblock.forge.did.bean.*
 import io.arcblock.forge.extension.*
 import io.jsonwebtoken.Jwts
@@ -21,7 +20,6 @@ import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys.secretKeyFor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import java.math.BigDecimal
@@ -54,26 +52,17 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
   @Autowired
   lateinit var forge: ForgeSDKComponent
 
-  @Value("\${chainHost}")
-  lateinit var forgeChainHost: String
-
-  var ip = Utils.getHost4Address()
-  var appInfo = lazy {
-    AppInfo().let {
-      it.chainHost = forgeChainHost
-      it.publisher = forge.wallet.address.did()
-      it.name = "Forge Java Demo"
-      it
-    }
-  }
+  @Autowired
+  lateinit var didService: AbtDidService
 
 
-  @Value("\${server.port}")
-  lateinit var port: String
 
-  init {
-    logger.info("currenIp: $ip")
-  }
+ var chainID = lazy {
+   forge.sdk!!.LazyChainInfo.value.network
+ }
+
+
+
 
 
   @RequestMapping("/session", method = [RequestMethod.GET, RequestMethod.POST])
@@ -118,7 +107,6 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
         .transactionsList.firstOrNull { it.code == Enum.StatusCode.ok }
       return if (response == null) "null" else JsonObject().apply { this.addProperty("hash", response.hash) }.toString()
     }
-
     return "{}"
   }
 
@@ -126,23 +114,17 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
   @RequestMapping("/did/{act}/{any}", method = [RequestMethod.GET])
   @ResponseBody
   fun getAuth(@PathVariable("act") act: String, @PathVariable("any") any: String, @RequestParam("_t_") t: String): String {
-    val url = ServletUriComponentsBuilder.fromCurrentRequest()
+    val token = tokenRepo.findById(t)
+    val jwt = DidAuthUtils.createDidAuthToken(arrayOf(AuthPrincipalClaim(if (token.isPresent) token.get().did?.did() else null)), didService.appInfo
+            , didService.chainInfo ,System.currentTimeMillis() / 1000, wallet = forge.wallet, url = ServletUriComponentsBuilder.fromCurrentRequest()
       .build()
       .toUri()
-      .toString()
-      .replace("localhost", ip)
-      .replace("127.0.0.1", ip)
-    val token = tokenRepo.findById(t)
-    val jwt = DidAuthUtils.createDidAuthToken(arrayOf(AuthPrincipalClaim(null, if (token.isPresent) token.get().did?.did() else null, "")),
-            appInfo
-              .value
-            , System.currentTimeMillis() / 1000, wallet = forge.wallet, url = url, others = null)
+      .toString(), others = null)
     return JsonObject().let {
       it.addProperty("appPk", forge.wallet.pkBase58())
       it.addProperty("authInfo", jwt)
       it
-    }
-      .toString()
+    }.toString()
   }
 
   @RequestMapping("/did/{act}/auth", method = [RequestMethod.POST])
@@ -152,54 +134,40 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
       .build()
       .toUri()
       .toString()
-      .replace("localhost", ip)
-      .replace("127.0.0.1", ip)
+      .replace("localhost", didService.appHost)
+      .replace("127.0.0.1", didService.appHost)
       .replace("/auth", "/auth/rst")
+
     val jwt = DidAuthUtils.parseJWT(body.userInfo)
-    val claims = when (act) {
-      "payment" -> {
-        logger.info("\n\njwt:${jwt.iss}   ${body.userPk}\n\n")
-        val unsignedTx = TransactionFactory.unsignTransfer(forge.sdk!!.chainInfo.value.network, jwt.iss.address() ?: "", body.userPk!!.decodeB58(), forge.wallet
-          .address,
-                token =
-                BigDecimal("5E18").toBigInteger().unSign())
-        arrayOf(SignatureClaim(meta = null, description = "Please pay 5 TBA", typeUrl = "utf-8", origin = unsignedTx.toByteArray().encodeB58(), data =
-        unsignedTx.toByteArray().hash(HashType.SHA3).encodeB58(), sig = ""))
-      }
-      "checkin" -> {
-        val unsignedTx = TransactionFactory.unsignPoke(forge.sdk!!.chainInfo.value.network, WalletInfo(jwt.iss.address(), body.userPk!!.decodeB58(), ByteArray
-        (0)))
-        arrayOf(SignatureClaim(null, "", origin = unsignedTx.toByteArray().encodeB58(), data = unsignedTx.toByteArray().hash(HashType.SHA3).encodeB58(),
-                description = "CheckIn and Get 25TBA"))
-      }
-      else -> arrayOf(ProfileClaim(null, arrayListOf("fullname", "email", "phone"), "choose a profile", ""))
-    }
     var token = tokenRepo.findById(t)
       .get()
       .apply {
-          this.status =  "scanned"
+        this.status =  "scanned"
       }
     tokenRepo.save(token)
 
-    val ret = DidAuthUtils.createDidAuthToken(claims, appInfo.value
-            , System.currentTimeMillis() / 1000, wallet = forge.wallet, url = url, others = null)
-    return JsonObject().let {
-      it.addProperty("appPk", forge.wallet.pkBase58())
-      it.addProperty("authInfo", ret)
-      it
+    return when (act) {
+      "payment" -> {
+        logger.info("\n\njwt:${jwt.iss}   ${body.userPk}\n\n")
+        didService.requirePayToken(BigDecimal("5E18").toBigInteger().unSign(), chainID.value, jwt.iss.address(), body.userPk!!.decodeB58(), forge
+          .wallet.address, "Pay 5 TBA", forge.wallet, url)
+      }
+      "checkin" -> {
+        val unsignedTx = TransactionFactory.unsignPoke(forge.sdk!!.LazyChainInfo.value.network, jwt.iss.address(), body.userPk!!.decodeB58())
+        didService.requireSiganture(unsignedTx.toByteArray(), "CheckIn and Get 25 TBA", "fg:t:transaction", forge.wallet, url)
+      }
+      else -> didService.requireProfile(arrayListOf("fullname", "email", "phone"), forge.wallet, url)
     }
-      .toString()
   }
 
   @RequestMapping("/did/{act}/auth/rst", method = [RequestMethod.POST])
   @ResponseBody
   fun postAuthRst(@PathVariable("act") act: String, @RequestParam("_t_") t: String, @RequestBody body: DidRequestBody): String {
-
     val url = ServletUriComponentsBuilder.fromCurrentRequest()
       .build()
       .toUri()
       .toString()
-      .replace("localhost", ip)
+      .replace("localhost", didService.appHost)
     val data = DidAuthUtils.parseJWT(body.userInfo)
     val claim = data.requestedClaims.firstOrNull()
       ?.asJsonObject
@@ -266,14 +234,8 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
         else -> JsonObject().apply { this.addProperty("status", "ok") }
       }
     }
-    val ret = DidAuthUtils.createDidAuthToken(arrayOf(), appInfo.value
-            , System.currentTimeMillis() / 1000, wallet = forge.wallet, url = url, others = othersJsonObject)
-    return JsonObject().let {
-      it.addProperty("appPk", forge.wallet.pkBase58())
-      it.addProperty("authInfo", ret)
-      it
-    }
-      .toString()
+
+    return didService.finishDIDAuth(forge.wallet, true, "", hashMapOf())
 
   }
 
@@ -283,13 +245,11 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
   fun token(@PathVariable("act") act: String, @RequestParam("_t_") t: String?): String {
     var json = JsonObject()
     val bytes = ByteArray(10)
-//      sun.security.provider.SecureRandom()
-//        .engineNextBytes(bytes)
     Random().nextBytes(bytes)
     val token = bytes.encodeB16()
     tokenRepo.save(TokenData(token, "created"))
     json.addProperty("token", token)
-    json.addProperty("url", Utils.didUrl("http://$ip:$port/api/did/$act/auth?_t_=$token", forge.wallet.pk.encodeB58(), forge.wallet.address))
+    json.addProperty("url", Utils.didUrl("http://${didService.appHost}/api/did/$act/auth?_t_=$token", forge.wallet.pk.encodeB58(), forge.wallet.address))
     return json.toString()
   }
 

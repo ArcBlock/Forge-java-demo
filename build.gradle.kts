@@ -13,13 +13,19 @@ version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
+
 	mavenCentral()
 	maven(url = "http://android-docs.arcblock.io/release")
+	mavenLocal()
 }
 
 dependencies {
-	implementation("io.arcblock.forge:core:1.0.1")
-	implementation("io.arcblock.forge:did:1.0.1")
+	implementation("io.arcblock.forge:core:1.0.8")
+	implementation("io.arcblock.forge:did:1.0.8")
+	implementation("io.arcblock.forge:abtdid-spring-boot-starter:1.0.8")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.1")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.1")
+
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	//implementation("org.springframework.security:spring-security-jwt")
 	implementation("org.postgresql:postgresql")
@@ -33,6 +39,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.springframework.boot:spring-boot-starter-aop")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

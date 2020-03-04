@@ -26,7 +26,8 @@ object Utils {
   public var tokenInfo = JsonObject()
 
   fun didUrl(url: String, pkB58: String, addr: String): String{
-    return URLEncoder.encode("https://abtwallet.io/i?action=requestAuth&url=$url", StandardCharsets.UTF_8.toString())
+    return "https://abtwallet.io/i/?action=requestAuth&url=${URLEncoder.encode(URLEncoder.encode(url, StandardCharsets.UTF_8.toString()),StandardCharsets
+      .UTF_8.toString())}"
   }
   /**
    * Returns this host's non-loopback IPv4 addresses.
