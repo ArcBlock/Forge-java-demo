@@ -20,9 +20,9 @@ repositories {
 }
 
 dependencies {
-	implementation("io.arcblock.forge:core:1.0.8")
-	implementation("io.arcblock.forge:did:1.0.8")
-	implementation("io.arcblock.forge:abtdid-spring-boot-starter:1.0.8")
+	implementation("io.arcblock.forge:core:1.0.9")
+	implementation("io.arcblock.forge:did:1.0.9")
+	implementation("io.arcblock.forge:abtdid-spring-boot-starter:1.0.9")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.10.1")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.1")
 

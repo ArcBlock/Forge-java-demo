@@ -134,8 +134,8 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
       .build()
       .toUri()
       .toString()
-      .replace("localhost", didService.appHost)
-      .replace("127.0.0.1", didService.appHost)
+      .replace("http://localhost", didService.appHost)
+      .replace("http://127.0.0.1", didService.appHost)
       .replace("/auth", "/auth/rst")
 
     val jwt = DidAuthUtils.parseJWT(body.userInfo)
@@ -167,7 +167,7 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
       .build()
       .toUri()
       .toString()
-      .replace("localhost", didService.appHost)
+      .replace("http://localhost", didService.appHost)
     val data = DidAuthUtils.parseJWT(body.userInfo)
     val claim = data.requestedClaims.firstOrNull()
       ?.asJsonObject
@@ -249,7 +249,7 @@ class Controllers(private val tokenRepo: TokenReposity, private val userRepo: Us
     val token = bytes.encodeB16()
     tokenRepo.save(TokenData(token, "created"))
     json.addProperty("token", token)
-    json.addProperty("url", Utils.didUrl("http://${didService.appHost}/api/did/$act/auth?_t_=$token", forge.wallet.pk.encodeB58(), forge.wallet.address))
+    json.addProperty("url", Utils.didUrl("${didService.appHost}/api/did/$act/auth?_t_=$token", forge.wallet.pk.encodeB58(), forge.wallet.address))
     return json.toString()
   }
 
